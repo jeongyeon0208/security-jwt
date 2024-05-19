@@ -3,9 +3,11 @@ package com.example.securityjwt.jwt;
 import com.example.securityjwt.dto.CustomUserDetails;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -37,26 +39,56 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authentication) throws IOException, ServletException {
-        CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
+//        단일 토큰 JWT
+//        CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
+//
+//        String username = customUserDetails.getUsername();
+//        System.out.println("username = " + username);
+//
+//        Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
+//        Iterator<? extends GrantedAuthority> iterator = authorities.iterator();
+//        GrantedAuthority auth = iterator.next();
+//
+//        String role = auth.getAuthority().toString();
+//        System.out.println("role = " + role);
+//
+//        String token = jwtUtil.generateToken(username, role, 1000L * 60 * 10); //10분
+//
+//        response.addHeader("Authorization", "Bearer " + token);
 
-        String username = customUserDetails.getUsername();
-        System.out.println("username = " + username);
+        //다중 토큰 JWT
+
+        //유저 정보
+        String urername = authentication.getName();
 
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
         Iterator<? extends GrantedAuthority> iterator = authorities.iterator();
         GrantedAuthority auth = iterator.next();
-
         String role = auth.getAuthority().toString();
-        System.out.println("role = " + role);
 
-        String token = jwtUtil.generateToken(username, role, 1000L * 60 * 10); //10분
+        //토큰 생성
+        String accessToken = jwtUtil.generateToken("access", urername, role, 1000L * 60 * 10); //10분
+        String refreshToken = jwtUtil.generateToken("refresh", urername, role, 1000L * 60 * 60 * 24); //24시간
 
-        response.addHeader("Authorization", "Bearer " + token);
+        //토큰을 헤더에 추가
+        response.setHeader("access", accessToken);
+        response.addCookie(createCookie("refresh", refreshToken));
+        response.setStatus(HttpStatus.OK.value());
     }
 
     @Override
     protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException failed) throws IOException, ServletException {
 
         response.setStatus(401);
+    }
+
+    private Cookie createCookie(String key, String value) {
+        Cookie cookie = new Cookie(key, value);
+        cookie.setMaxAge(60 * 60 * 24); //24시간
+//        cookie.setSecure(true); //https 사용할 때
+//        cookie.setPath("/"); //모든 경로에서 접근 가능
+        cookie.setHttpOnly(true); //자바스크립트에서 접근 불가
+
+        return cookie;
     }
 }
