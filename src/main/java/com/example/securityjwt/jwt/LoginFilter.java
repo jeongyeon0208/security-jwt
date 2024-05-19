@@ -1,6 +1,8 @@
 package com.example.securityjwt.jwt;
 
+import com.example.securityjwt.domain.RefreshEntity;
 import com.example.securityjwt.dto.CustomUserDetails;
+import com.example.securityjwt.repository.RefreshRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -17,12 +19,14 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Date;
 import java.util.Iterator;
 
 @RequiredArgsConstructor
 public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     private final AuthenticationManager authenticationManager;
     private final JWTUtil jwtUtil;
+    private final RefreshRepository refreshRepository;
 
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
@@ -69,6 +73,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         //토큰 생성
         String accessToken = jwtUtil.generateToken("access", urername, role, 1000L * 60 * 10); //10분
         String refreshToken = jwtUtil.generateToken("refresh", urername, role, 1000L * 60 * 60 * 24); //24시간
+        saveRefreshEntity(urername, refreshToken, 1000L * 60 * 60 * 24);
 
         //토큰을 헤더에 추가
         response.setHeader("access", accessToken);
@@ -90,5 +95,16 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         cookie.setHttpOnly(true); //자바스크립트에서 접근 불가
 
         return cookie;
+    }
+
+
+    private void saveRefreshEntity(String username, String refreshToken, Long expiration) {
+        Date date = new Date(System.currentTimeMillis() + expiration);
+        RefreshEntity refreshEntity = RefreshEntity.builder()
+                .username(username)
+                .refreshToken(refreshToken)
+                .expiration(date.toString())
+                .build();
+        refreshRepository.save(refreshEntity);
     }
 }

@@ -6,6 +6,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class ReissueService {
@@ -42,13 +45,30 @@ public class ReissueService {
         return refreshToken;
     }
 
-    public String JenerateNewAccessToken(String refreshToken) {
+    public List<String> JenerateNewAccessToken(String refreshToken) {
         String username = jwtUtil.getUserNameFromToken(refreshToken);
         String role = jwtUtil.getRoleFromToken(refreshToken);
 
-        //make new Access Token
-        String newAccessToken = jwtUtil.generateToken("access", username, role, 1000L * 60 * 10); //10분
+        List<String> tokens = new ArrayList<>();
 
-        return newAccessToken;
+        //make new Access, Refresh Token
+        String newAccessToken = jwtUtil.generateToken("access", username, role, 1000L * 60 * 10); //10분
+        String newRefreshToken = jwtUtil.generateToken("refresh", username, role, 1000L * 60 * 60 * 24); //24시간
+
+        tokens.add(newAccessToken);
+        tokens.add(newRefreshToken);
+
+        return tokens;
+    }
+
+
+    public Cookie createCookie(String key, String value) {
+        Cookie cookie = new Cookie(key, value);
+        cookie.setMaxAge(60 * 60 * 24); //24시간
+//        cookie.setSecure(true); //https 사용할 때
+//        cookie.setPath("/"); //모든 경로에서 접근 가능
+        cookie.setHttpOnly(true); //자바스크립트에서 접근 불가
+
+        return cookie;
     }
 }

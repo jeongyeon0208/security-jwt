@@ -1,5 +1,6 @@
 package com.example.securityjwt.jwt;
 
+import com.example.securityjwt.domain.RefreshEntity;
 import io.jsonwebtoken.Jwts;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
@@ -47,4 +48,5 @@ public class JWTUtil {
                 .signWith(secretkey)
                 .compact();
     }
+
 }
