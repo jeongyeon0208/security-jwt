@@ -3,6 +3,7 @@ package com.example.securityjwt.config;
 import com.example.securityjwt.jwt.JWTFilter;
 import com.example.securityjwt.jwt.JWTUtil;
 import com.example.securityjwt.jwt.LoginFilter;
+import com.example.securityjwt.repository.RefreshRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.mapping.Collection;
@@ -28,6 +29,7 @@ public class SecurityConfig {
 
     private final AuthenticationConfiguration authenticationConfiguration;
     private final JWTUtil jwtUtil;
+    private final RefreshRepository refreshRepository;
 
 
     //AuthenticationManager Bean 등록
@@ -94,7 +96,7 @@ public class SecurityConfig {
 
         http
                 //UsernamePasswordAuthenticationFilter 자리에 LoginFilter를 추가
-                .addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil), UsernamePasswordAuthenticationFilter.class);
+                .addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil, refreshRepository), UsernamePasswordAuthenticationFilter.class);
 
         //세션 설정
         http
