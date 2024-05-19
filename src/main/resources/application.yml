@@ -1,0 +1,26 @@
+spring:
+  application:
+    name : SecurityJWT
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/securityjwt
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        show_sql: true
+        format_sql: true
+        use_sql_comments: true
+        hbm2ddl:
+          auto: none
+
+  jwt:
+    secret: tpzbatpasdkbfqkdlakjsdkfasldfkjsfkasgnanwifk
+    expiration: 86400000 # 1 day
+    header: Authorization
+    prefix: Bearer
+    issuer: SecurityJWT
+    audience: SecurityJWT
